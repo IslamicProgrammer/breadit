@@ -1,4 +1,4 @@
-import { NextAuthOptions } from "next-auth";
+import { NextAuthOptions, getServerSession } from "next-auth";
 import { db } from "./db";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import GoogleProvider from "next-auth/providers/google";
@@ -29,9 +29,7 @@ export const AuthOptions: NextAuthOptions = {
     },
     async jwt({ token, user }) {
       const dbUser = await db.user.findFirst({
-        where: {
-          email: user.email,
-        },
+        where: { email: user?.email },
       });
 
       if (!dbUser) {
@@ -40,32 +38,22 @@ export const AuthOptions: NextAuthOptions = {
       }
 
       if (!dbUser.username) {
-        await db.user
-          .update({
-            where: { id: user.id },
-            data: { username: nanoid(10) },
-          })
-          .then(() => {
-            return {
-              id: dbUser.id,
-              name: dbUser.name,
-              email: dbUser.email,
-              picture: dbUser.image,
-              username: dbUser.username || "",
-            };
-          });
+        await db.user.update({
+          where: { id: user.id },
+          data: { username: nanoid(10) },
+        });
       }
 
       return {
         id: dbUser.id,
         name: dbUser.name,
-        email: dbUser.email,
+        email: dbUser?.email,
         picture: dbUser.image,
-        username: dbUser.username || "",
+        username: dbUser.username,
       };
     },
-    redirect() {
-      return "/";
-    },
+    redirect: () => "/",
   },
 };
+
+export const getAuthSession = () => getServerSession(AuthOptions);

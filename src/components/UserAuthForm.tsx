@@ -17,7 +17,7 @@ const UserAuthForm = () => {
 
     try {
       // throw new Error("Error");
-      const user = await signIn("google");
+      await signIn("google");
     } catch (error: any) {
       toast({
         title: "There was a problem.",
